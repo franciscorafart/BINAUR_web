@@ -16,3 +16,12 @@ I will optimize the load of music files to have them stored outside the app. I w
 Lessons Learned:
 
 With this project I learnt how to integrate Node Express with Firebase, as well as basic audio file management and mixing with the Web Audio API.
+
+How to use:
+
+1. Download the files
+2. Go to directory in terminal
+3. run $ npm install (need Node installed first)
+4. run $ npm run dev
+5. Go to local server 3000 in your browser
+6. Meditate and follow me on github

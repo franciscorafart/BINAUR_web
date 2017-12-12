@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+    	<meta charset="utf-8">
+    	<meta name="description" content="Your description goes here">
+    	<meta name="keywords" content="one, two, three">
+
+
+
+		<title>BINAUR</title>
+
+		<!--FAVICON-->
+		<link rel="shortcut icon" type="image/png" href="img/Logo1.png"/>
+
+		<!-- external CSS link -->
+		<link rel="stylesheet" href="css/normalize.css">
+		<link rel="stylesheet" href="css/style.css">
+		<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+
+		<link rel="stylesheet" href="css/font-awesome-4.7.0/css/font-awesome.min.css">
+	</head>
+	<body>
+		<header class="clearfix">
+			<div class="">
+				<nav>
+					<ul>
+						<li><a href="#"><img src="img/Logo1.png" alt="Logo"></a></li>
+						<li><a href="#"><span>Donate</span></a></li>
+						<li><a href="#"><span>Binaural beats?</span></a></li>
+					</ul>
+				</nav>
+			</div>
+			<div class="">
+				<nav>
+					<ul>
+						<li><a href="login.html"><span>Log In</span></a></li>
+						<li><a href="#"><span>Sign Up</span></a></li>
+						<li><a href="#"><span>Contact</span></a></li>
+						<li><a href="#"><i class="fa fa-cog" aria-hidden="true"></i></a></li>
+					</ul>
+				</nav>
+			</div>
+
+		</header>
+
+		<section class="banner clearfix">
+			<div class="">
+				<h2>BINAUR</h2>
+				<h1>Experience the power of collective meditations</h1>
+				<p>BINAUR is a binaural beats collective meditation app. Use it to achieve relaxation, greater focus and to induce sleep</p>
+			</div>
+		</section>
+
+		<section class="selectMusic">
+			<h3>Select background music</h3>
+			<table>
+				<tr>
+					<th>Song</th>
+					<th>Description</th>
+					<th>Author</th>
+					<th>Select</th>
+				</tr>
+				<tr>
+					<td>Dreams</td>
+					<td>Soothing synth</td>
+					<td>Martin Lopez</td>
+					<td><img src="#" alt="-"></td>
+				</tr>
+				<tr>
+					<td>Healing</td>
+					<td>Natural sounds</td>
+					<td>Alejandro Arroyo</td>
+					<td><img src="#" alt="-"></td>
+				</tr>
+			</table>
+		</section>
+
+		<section class="individual clearfix">
+			<div class="">
+			<h2>Individual mediation sessions</h2>
+			<h3>Plug your headphones and setup your session</h3>
+			</div>
+
+			<div class="howDoYou">
+				<div>
+					<h3>How do you feel?</h3>
+					<button type="button" name="button" class="userFeel">Sleepy</button>
+					<button type="button" name="button" class="userFeel">Meditative</button>
+					<button type="button" name="button" class="userFeel">Relaxed</button>
+					<button type="button" name="button" class="userFeel">Focused</button>
+					<button type="button" name="button" class="userFeel">Stressed</button>
+				</div>
+
+				<div id="howDoYouWantToFeel">
+					<h3>How do you want to feel?</h3>
+					<button type="button" name="button" class="userWantsFeel">Sleepy</button>
+					<button type="button" name="button" class="userWantsFeel">Meditative</button>
+					<button type="button" name="button" class="userWantsFeel">Relaxed</button>
+					<button type="button" name="button" class="userWantsFeel">Focused</button>
+				</div>
+				<div class="timeSelector">
+					<h3>Select duration</h3>
+					<button type="button" name="button" class="sessionTime">5 min</button>
+					<button type="button" name="button" class="sessionTime">10 min</button>
+					<button type="button" name="button" class="sessionTime">15 min</button>
+					<button type="button" name="button" class="sessionTime">20 min</button>
+				</div>
+			</div>
+
+			<div class="">
+				<button type="button" name="Start" id="startSession">Start session</button>
+			</div>
+		</section>
+
+		<section class="collective clearfix">
+			<div class="">
+			<h2>Collective Meditation Sessions</h2>
+			<h3>Plug your headphones and click on an active session to join (Active sessions in red)</h3>
+
+			</div>
+
+			<div class="table">
+				<table id="sessionTable">
+
+						<tr>
+							<th>Session name</th>
+							<th>Description</th>
+							<th>Time</th>
+							<th>Session image</th>
+							<th>Binaural frequency</th>
+							<th>Duration</th>
+						</tr>
+
+						<!-- Insert For that loads from database. -->
+						<%
+						let weekDays = ['Mon','Tue','Wed','Thur','Fri','Sat','Sun']
+						let timeNow = Date.now()/1000
+
+						//for loop that populates table.
+						for(var i =0;i<sessions.length;i++){%>
+
+						<%
+							//Determine if session is active
+
+							let sessionActive="Inactive"
+				      let classActive = "";
+				      let durationMins = parseInt(sessions[i].sessionDuration)/60;
+
+				      //Define the end time of the session
+				      var endTime = sessions[i].dateUnix + sessions[i].sessionDuration;
+
+				      //Evaluate if session is active
+				      if ((timeNow>sessions[i].dateUnix) && (timeNow<endTime)){
+				        sessionActive = "Active Now!";
+				        classActive = "classActive";
+				      }
+
+							let title = sessions[i].title
+							let description = sessions[i].message
+
+							let sessDateString = new Date(sessions[i].dateUnix*1000)
+								//Transform sesDateString into a displayable format
+								let mins = "0"+sessDateString.getMinutes();//Formating minutes so that it always as 2 characters
+								let month = parseInt(sessDateString.getMonth())+1
+								//redefine sessDateString as an actual string
+								sessDateString = weekDays[sessDateString.getUTCDay()-1]+" "+month+"-"+sessDateString.getUTCDate()+"-"+sessDateString.getUTCFullYear()+" "+sessDateString.getHours()+":"+mins.substr(-2);
+
+							let imgURL = sessions[i].imageURL
+							let freq = sessions[i].sessionFreq
+
+						%>
+							<tr class='<%= classActive%>'>
+								<td><%= title %></td>
+								<td><%= description %></td>
+								<td><%= sessDateString %></td>
+								<td><img src='<%=imgURL%>'></img></td>
+								<td><%= freq%> hz</td>
+								<td><%= durationMins%> min</td>
+							</tr>
+						<%}%>
+				</table>
+			</div>
+
+
+		</section>
+
+
+		<section class="createSession clearfix">
+			<div class="">
+				<h2>Create Meditation Session</h2>
+			</div>
+
+			<div class="">
+				<div id="collectiveFreq">
+					<h3>What's the mood for your session?</h3>
+					<button type="button" name="button" class="collectiveFreq">Sleepy</button>
+					<button type="button" name="button" class="collectiveFreq">Meditative</button>
+					<button type="button" name="button" class="collectiveFreq">Relaxed</button>
+					<button type="button" name="button" class="collectiveFreq">Focused</button>
+				</div>
+
+				<div class="collTimeSelector">
+					<h3>Select duration</h3>
+					<button type="button" name="button" class="collSessionTime">5 min</button>
+					<button type="button" name="button" class="collSessionTime">10 min</button>
+					<button type="button" name="button" class="collSessionTime">15 min</button>
+					<button type="button" name="button" class="collSessionTime">20 min</button>
+				</div>
+			</div>
+
+			<div class="createTextInput">
+				<div class="">
+					<h3>Set session name</h3>
+					<input id="titleInput" type="text" name="" placeholder="title">
+					<h3>Describe your session</h3>
+					<input id="desInput" type="text" name="" placeholder="description">
+					<h3>Set a date and time</h3>
+					<input id="dateInput"type="datetime-local" name="" value="">
+
+				</div>
+			</div>
+
+			<div class="">
+				<button id="create" type="button" name="button">Create</button>
+			</div>
+
+		</section>
+
+		<footer class="clearfix">
+			<div class="">
+				<h3>Follow us!</h3>
+				<nav>
+					<ul>
+						<!-- i not showing up in the browser. -->
+						<li><a href="https://www.facebook.com/BinaurApp-198066007351794/"><i class="fa fa-facebook-official" aria-hidden="true"></i></a></li>
+						<li><a href="mailto:francisco.rafart@gmail.com"><i class="fa fa-envelope" aria-hidden="true"></a></i></li>
+					</ul>
+				</nav>
+			</div>
+
+		</footer>
+
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> -->
+<!-- <script src="js/jquery-3.2.1.min.js"></script> -->
+<script src="https://code.jquery.com/jquery.min.js"></script>
+<script src="js/script.js"></script>
+	</body>
+</html>

@@ -5,23 +5,22 @@ const bodyParser = require('body-parser')
 
 // Initialize Firebase
   let config = {
-  apiKey: "Your_api_key",
-  authDomain: "Your_auth_domain",
-  databaseURL: "Your_database_url",
-  projectId: "Yopur_project_id",
-  storageBucket: "Your_storage_bucket",
-  messagingSenderId: "Your_messaging_id"
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_Domain",
+  databaseURL: "Your_URL",
+  projectId: "YOUR_project_id",
+  storageBucket: "YOUR_storagebucket",
+  messagingSenderId: "YOUR_messaging_sending_ID"
 };
-//Start app
-firebase.initializeApp(config);
 
+firebase.initializeApp(config);
 //Storage, database and auth
 let database = firebase.database()
 //References to nodes in app
 let sessionData = database.ref('/Posts/')
 let userRef = database.ref().child('/Users/')
 
-//Listen to the server port
+//Listen to the port
 app.listen(process.env.PORT || 3000,()=>{
   console.log('listening on 3000')
 })
@@ -33,11 +32,22 @@ app.use(bodyParser.json())
 app.use(express.static('public'))
 
 //an array with all the entries in the database that are passed to the index.ejs file
-let resultArray = loadTable()
+let resultArray
+let timeNow = new Date();
+timeNow = Math.floor(timeNow.getTime()/1000)
+// loadTable(timeNow)
 
 //Setup API
 app.get('/',(req,res)=>{
-  res.render('index.ejs',{sessions: resultArray})
+  // resultArray = loadTable()
+  // res.render('index.ejs',{sessions: resultArray})
+
+  //no need to send array from here, we can load the table in the same javascript
+  res.render('index.ejs')
+})
+
+app.get('/help',(req,res)=>{
+  res.render('help.ejs')
 })
 //Api request to create new sessions
 app.post('/postNewSession',(req,res)=>{
@@ -54,24 +64,34 @@ app.post('/postNewSession',(req,res)=>{
   });
   res.redirect('/')
 })
+//Api call that refreshes collective session table.
+app.post('/refresh',(req,res)=>{
 
-function loadTable(){
-  //TODO: Solve date now issue. Only using the initial server time
+  console.log(req.body.time)
+  loadTable(req.body.time)
+  //Send result array from here
+  res.send({sessions: resultArray})
+})
+
+//function that queries database for sessions
+function loadTable(timeNow){
+
   sessionData = database.ref('/Posts/')
-  var timeNow = new Date();
-  timeNow = Math.floor(timeNow.getTime()/1000)
   console.log('Date now = '+timeNow)
   //Provide  current and future sessions only
   let currentSessionRef = sessionData.orderByChild('dateUnix').startAt(timeNow-1200)
-  let resultArray = []
+  let resultArr = []
   //function to add current and future sessions to resultArray
-  currentSessionRef.once('value',function(snapshot){
+  currentSessionRef.on('value',function(snapshot){
+    resultArr = []
     snapshot.forEach(function(childSnap){
       let childData = childSnap.val()
       //add childData to array
-      resultArray.push(childData)
+      resultArr.push(childData)
+      // console.log(childData)
     })
+    //Using global variable. Not best practice
+    resultArray = resultArr
   })
-
-  return resultArray
+  // return resultArr
 }

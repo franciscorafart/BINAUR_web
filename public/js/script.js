@@ -27,15 +27,15 @@ var sessionDuration = 300; //default duration in milliseconds
 
 //Timer variable and other timer ids
 var timerId = 0;
-var fadeId = 0;
+// var fadeId = 0;
 var fadeDir = -1;
 var deltaPerTime = 0;
 
 //audio tracks url array
 //TODO: Outsource the file storage
 var urlArray = [
-  '../audio/Dream.mp3',
-  '../audio/Healing.mp3'
+  'https://s3.us-east-2.amazonaws.com/binaur/Dream.mp3',
+  'https://s3.us-east-2.amazonaws.com/binaur/Healing.mp3'
 ];
 
 //Oscillators
@@ -52,51 +52,26 @@ pan1.connect(gainNode);
 pan2.connect(gainNode);
 
 gainNode.connect(audioCtx.destination);
-gainNode.gain.value = 0; //set
+gainNode.gain.setTargetAtTime(0,audioCtx.currentTime,0); //set
 osci1.start(0);
 osci2.start(0);
-osci1.frequency.value = freq;
-osci2.frequency.value = freq+200;
+osci1.frequency.setTargetAtTime(freq, audioCtx.currentTime,0)
+osci2.frequency.setTargetAtTime(freq+200, audioCtx.currentTime,0)
 osci1.type = 'sine';
 osci2.type = 'sine';
-pan1.pan.value = 1;
-pan2.pan.value = -1;
+pan1.pan.setTargetAtTime(1,audioCtx.currentTime,0)
+pan2.pan.setTargetAtTime(-1,audioCtx.currentTime,0)
 
 //Firebase
 //Define time right now
-var timeNow = new Date();
-timeNow = timeNow.getTime()/1000;
+var timeNow = new Date()
+timeNow = Math.floor(timeNow.getTime()/1000)
 console.log("Time now = "+timeNow)
 
 $(document).ready(function(){
 
-    //Add hover and click listener
-    //Remove hover listers First
-    $(".collective tr").unbind("mouseenter mouseleave");
-    $(".classActive").off();
-
-    //add hover listener
-    $(".collective tr+tr").hover(function(){
-      $(this).toggleClass("hover");
-      console.log("hover collective");
-    });
-
-    $(".classActive").on('click',function(){
-
-      //Extract frequency and time information from the table content in the DOM
-      //Frequency
-      binBeat = parseInt($(this)[0].children[4].textContent);
-      startBinBeat = binBeat;//Both start and finishing frequencies are the same in collective meditations
-
-      //Duration time left
-      //In the mean time session time
-      sessionDuration = parseInt($(this)[0].children[5].textContent)*60;
-
-      //Trigger audio
-      //Activate Fade
-      activateFade();
-    });
-
+    //refresh collective table (add listeners and hovers)
+    refresh(timeNow)
 
   //Load default music track
   bufferLoader = new BufferLoader(
@@ -110,22 +85,26 @@ $(document).ready(function(){
 
 // Individual sessions setup.
   //Play button listener
-  $("#startSession").on("click", function(){
+  $("#startSession").on("click touchstart", function(){
 
     //Activate audio fade
     activateFade();
+    //start start
+
 
     //Toggle html of start button. Fade dir determines in what direction the fade will go next. 1 for fade in and -1 for fade out.
     if(fadeDir==1){
       $(this).html("Stop session");
+      timerId = setInterval(startClock,1000)
     }else {
       $(this).html("Start session");
+      clearInterval(timerId)
     }
     console.log("deltaPerTime = "+deltaPerTime);
   });
 
   //TODO:Refactor on click functions. Not DRY
-  $('.userFeel').on('click',function(event){
+  $('.userFeel').on('click touchstart',function(event){
 
     //Change color of buttons
     for (i = 1; i <=5; i+=1 ){
@@ -138,12 +117,12 @@ $(document).ready(function(){
       }
     }
     //Determine which button was pressed
-    startBinBeat = whichFreq($(this).index());
-    osci2.frequency.value = freq+startBinBeat;
+    startBinBeat = whichFreq($(this).index())
+    osci2.frequency.setTargetAtTime(freq+startBinBeat,audioCtx.currentTime,0)
   });
 
 //Define individual session target frequency
-  $('.userWantsFeel').on('click', function(event){
+  $('.userWantsFeel').on('click touchstart', function(event){
 
     for (i = 1; i <=4; i+=1 ){
       if (i != $(this).index()){
@@ -157,7 +136,7 @@ $(document).ready(function(){
   });
 
   //Define individual session time
-  $('.sessionTime').on('click', function(event){
+  $('.sessionTime').on('click touchstart', function(event){
 
     for (i = 1; i <=4; i+=1 ){
       if (i != $(this).index()){
@@ -172,7 +151,7 @@ $(document).ready(function(){
   });
 
   //Define collective session time
-  $('.collSessionTime').on('click', function(event){
+  $('.collSessionTime').on('click touchstart', function(event){
 
     for (i = 1; i <=4; i+=1 ){
       if (i != $(this).index()){
@@ -186,7 +165,7 @@ $(document).ready(function(){
   });
 
   //Define collective frequency
-  $('.collectiveFreq').on('click', function(event){
+  $('.collectiveFreq').on('click touchstart', function(event){
 
     for (i = 1; i <=4; i+=1 ){
       if (i != $(this).index()){
@@ -202,9 +181,9 @@ $(document).ready(function(){
 /*MUSIC SECTION*/
 
   //Select music
-  $(".selectMusic tr + tr").on('click', function(){
+  $(".selectMusic tr + tr").on('click touchstart', function(){
     //Attach tick to selected track
-    $(".selectMusic tr + tr").children("td:last-of-type").children("img").attr("src","#");
+    $(".selectMusic tr + tr").children("td:last-of-type").children("img").attr("src","img/dash.png");
     $(this).children("td:last-of-type").children("img").attr("src","img/tick.png");
 
     //Stop source audio
@@ -235,7 +214,7 @@ $(document).ready(function(){
 /*Functions*/
 
   //Function that creates session
-  $("#create").on("click", function(){
+  $("#create").on("click touchstart", function(){
     //Extract data from inputs
     var date = new Date($("#dateInput").val());
 
@@ -249,43 +228,52 @@ $(document).ready(function(){
     var colDur = sessionDuration;
     //TODO: Implement image upload to replace default image of session
     createMeditation(title,description,dateFormat,timestamp,1,"https://firebasestorage.googleapis.com/v0/b/testfirebase1-726b7.appspot.com/o/sessionImage%2FMorning%20focus2017-10-10%2012%3A00%3A00%20%200000?alt=media&token=ff43fd91-4e08-4ebc-b930-c5f5a3c0e79e",colDur,freqSes);
-  });
+  })
+
+  $("#refresh").on("click",()=>{
+
+
+    //time Now
+    let timeNow = new Date();
+    timeNow = Math.floor(timeNow.getTime()/1000)
+
+    refresh(timeNow)
+
+    //Refill table with API answer
+  })
 
   //Function that sets the timer for stoping the session once it started
   function startClock(){
     //First we evaluate if time is out
     if(sessionDuration <= 0){
       console.log("Session over")
-      clearInterval(timerId);
+      // clearInterval(timerId)
       //change direcion of fade
       fadeDir = fadeDir* -1;
       //fade audio.
-      fadeId = setInterval(fade, 100);
+      fade()
+      // fadeId = setInterval(fade, 100);
       //TODO: Should audio stop as well?
 
     } else {
     sessionDuration-=1;
     //Change oscillators frequencies
-    osci2.frequency.value += deltaPerTime;
+    osci2.frequency.setTargetAtTime(osci2.frequency.value+deltaPerTime,audioCtx.currentTime,0)
+    // osci2.frequency.value += deltaPerTime;
     console.log("osci2 freq = "+osci2.frequency.value);
     console.log("sessionDuration = "+sessionDuration);
     }
   }
 
   function fade(){
+
+    //TODO: Replace with gainNode.gain.setTargetAtTime(1.0, audioCtx.currentTime + 1, 0.5)
+
     if (fadeDir == 1){
-      gainNode.gain.value += 0.05;
-      if (gainNode.gain.value >=0.3) { //0.3 because at 1.0 sound gets distorted
-        gainNode.gain.value = 0.3;
-        clearInterval(fadeId);
-      }
+      gainNode.gain.setTargetAtTime(0.3 ,audioCtx.currentTime, 2)
     } else if (fadeDir == -1){
-      gainNode.gain.value -=0.05;
-      if (gainNode.gain.value <=0){
-        gainNode.gain.value = 0;
-        clearInterval(fadeId);
-        //TODO: stop audio here?
-      }
+      gainNode.gain.setTargetAtTime(0 ,audioCtx.currentTime, 2)
+      //TODO: stop audio here?
     }
     console.log(gainNode.gain.value);
   }
@@ -293,7 +281,8 @@ $(document).ready(function(){
   function activateFade(){
     //Fade in or Fade out
     fadeDir = fadeDir* -1;
-    fadeId = setInterval(fade, 100);
+    fade()
+    // fadeId = setInterval(fade, 100);
     //Define deltaTime
     deltaPerTime = (binBeat-startBinBeat)/(sessionDuration);
   }
@@ -315,7 +304,6 @@ $(document).ready(function(){
 
   //Function to create meditation in the database
   function createMeditation(titleSession,description,timeFormat,unix,numberUsers,img,duration,sessionFrequency){
-    //TODO: Send as a fetch request
 
     //fetch request to the API
     fetch('postNewSession',{
@@ -364,7 +352,7 @@ $(document).ready(function(){
   function whichDuration(x){
     var result;
     switch (x) {
-      case 1: result = 15; //5minutes 300
+      case 1: result = 300; //5minutes 300
       break;
       case 2: result = 600;// 10 minutes
       break;
@@ -377,6 +365,86 @@ $(document).ready(function(){
       default: console.log("nothing");
     }
     return result;
+  }
+
+  function refresh(timeNow){
+    //Api call
+    fetch('refresh',{
+      method: 'post',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        'time': timeNow
+      })
+    }).then(response =>{
+      if (response.ok) return response.json()
+    }).then(data=>{
+      console.log("Datos recibidos")
+      console.log(data)
+      //Vaciar tabla
+      refreshTable(data.sessions) //passing an array with the sessions
+      // window.location.reload(true)
+    })
+  }
+
+  function refreshTable(arraySessions){
+    let $table = $("#sessionTable")
+    $table.empty()
+
+    let $tableHead = '<tr><th>Session name</th><th>Description</th><th>Time</th><th>Session image</th><th>Binaural frequency</th><th>Duration</th></tr>'
+    $table.append($tableHead)
+
+    let timeNow = Date.now()/1000
+
+    arraySessions.forEach((el)=>{
+
+      let sessDateString = new Date(el.dateUnix*1000)
+      let endTime = el.dateUnix + el.sessionDuration
+      let classActive = ""
+      //Evaluate if session is active
+      if ((timeNow>el.dateUnix) && (timeNow<endTime)){
+        classActive = "classActive";
+      }
+
+      //TODO: Correct date format
+      //Transform sesDateString into a displayable format
+      let mins = "0"+sessDateString.getMinutes()//Formating minutes so that it always as 2 characters
+      let month = parseInt(sessDateString.getMonth())+1
+      //redefine sessDateString as an actual string
+      let weekDays = ['Mon','Tue','Wed','Thur','Fri','Sat','Sun']
+      sessDateString = weekDays[sessDateString.getUTCDay()-1]+" "+month+"-"+sessDateString.getUTCDate()+"-"+sessDateString.getUTCFullYear()+" "+sessDateString.getHours()+":"+mins.substr(-2);
+
+      let $thisRow = "<tr class='"+classActive+"'><td>"+el.title+"</td><td>"+el.message+"</td><td>"+sessDateString+"</td><td><img src='"+el.imageURL+"'></img></td><td>"+el.sessionFreq+" hz</td><td>"+(el.sessionDuration/60)+" min</td></tr>"
+      $table.append($thisRow)
+
+    })
+    //Add click listener and hover
+    //Remove hover listers First
+    $(".collective tr").unbind("mouseenter mouseleave");
+    $(".classActive").off();
+
+    //add hover listener
+    $(".collective tr+tr").hover(function(){
+      $(this).toggleClass("hover");
+      console.log("hover collective");
+    });
+    //add click listener to active collective sessions
+    $(".classActive").on('click touchstart',function(){
+
+      //Extract frequency and time information from the table content in the DOM
+      //Frequency
+      binBeat = parseInt($(this)[0].children[4].textContent);
+      startBinBeat = binBeat;//Both start and finishing frequencies are the same in collective meditations
+
+      //Duration time left
+      //In the mean time session time
+      sessionDuration = parseInt($(this)[0].children[5].textContent)*60;
+
+      //Trigger audio
+      //Activate Fade
+      activateFade();
+      //start clock
+      timerId = setInterval(startClock,1000)
+    });
   }
 
 });
